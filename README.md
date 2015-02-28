@@ -40,6 +40,7 @@ History
 
 - v0.1: Initial public release
 - v0.2: Upgrade IPython to version 2.4
+- v0.3: support IPython3 with kernels for R, Perl and Bash
 
 
 Licence (MIT)

@@ -14,10 +14,24 @@ RUN apt-get -qq update && apt-get install --no-install-recommends -y apt-transpo
     libfreetype6-dev libpng-dev net-tools procps \
     r-base libreadline-dev && \
     pip install distribute --upgrade && \
-    pip install pyzmq ipython==3.0 jinja2 tornado pygments numpy biopython scikit-learn pandas \
+    pip install pyzmq ipython==3.0 jinja2 tornado pygments \
+        numpy biopython scikit-learn pandas \
         scipy sklearn-pandas bioblend matplotlib patsy pysam khmer dendropy ggplot mpld3 sympy rpy2 && \
+        ##bash_kernel && \
+    # Install IRKernel, the IPython R kernel
+    apt-get -qq --no-install-recommends -y libcurl4-openssl-dev && \
+    Rscript -e 'chooseCRANmirror(ind=81);install.packages("devtools"); install.packages("RCurl")' && \
+    Rscript -e 'library(devtools); install_github("armstrtw/rzmq"); install_github("takluyver/IRdisplay"); install_github("takluyver/IRkernel"); IRkernel::installspec()' && \
+    # Cleanup
     apt-get remove -y --purge libzmq-dev python-dev libc-dev build-essential binutils gfortran libreadline-dev && \
     apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+#RUN wget https://github.com/zmughal/p5-Devel-IPerl/archive/master.zip && \
+#    unzip master.zip && cd p5-Devel-IPerl-master && \
+#    curl -L https://cpanmin.us | perl - --installdeps . && \
+#    rm -rf p5-Devel-IPerl-master
+
+# list all available kernels: ipython kernelspec list
 
 ADD ./startup.sh /startup.sh
 RUN chmod +x /startup.sh
