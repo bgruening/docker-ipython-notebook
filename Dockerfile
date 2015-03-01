@@ -8,20 +8,20 @@ MAINTAINER Björn A. Grüning, bjoern.gruening@gmail.com
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get -qq update && apt-get install --no-install-recommends -y apt-transport-https \
-    libzmq1 libzmq-dev python-dev libc-dev pandoc python-pip pkg-config \
-    build-essential libblas-dev liblapack-dev gfortran \
-    libfreetype6-dev libpng-dev net-tools procps \
-    r-base libreadline-dev && \
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9 && \
+    echo 'deb http://cran.r-project.org/bin/linux/ubuntu trusty/' >> /etc/apt/sources.list && \
+    apt-get -qq update && apt-get install --no-install-recommends -y libcurl4-openssl-dev libxml2-dev \
+    apt-transport-https python-dev libc-dev pandoc python-pip pkg-config liblzma-dev libbz2-dev libpcre3-dev \
+    build-essential libblas-dev liblapack-dev gfortran libzmq3-dev \
+    libfreetype6-dev libpng-dev net-tools procps r-base libreadline-dev && \
     pip install distribute --upgrade && \
     pip install pyzmq ipython==3.0 jinja2 tornado pygments \
         numpy biopython scikit-learn pandas \
         scipy sklearn-pandas bioblend matplotlib patsy pysam khmer dendropy ggplot mpld3 sympy rpy2 && \
         ##bash_kernel && \
     # Install IRKernel, the IPython R kernel
-    apt-get -qq --no-install-recommends -y libcurl4-openssl-dev && \
-    Rscript -e 'chooseCRANmirror(ind=81);install.packages("devtools"); install.packages("RCurl")' && \
-    Rscript -e 'library(devtools); install_github("armstrtw/rzmq"); install_github("takluyver/IRdisplay"); install_github("takluyver/IRkernel"); IRkernel::installspec()' && \
+    Rscript -e 'chooseCRANmirror(ind=81);install.packages("devtools"); install.packages("RCurl")' \
+    -e 'library(devtools); install_github("armstrtw/rzmq"); install_github("takluyver/IRdisplay"); install_github("takluyver/IRkernel"); IRkernel::installspec()' && \
     # Cleanup
     apt-get remove -y --purge libzmq-dev python-dev libc-dev build-essential binutils gfortran libreadline-dev && \
     apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
