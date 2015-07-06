@@ -23,7 +23,7 @@ RUN apt-get -qq update && apt-get install --no-install-recommends -y libbz2-dev 
 
 RUN apt-get -qq update && apt-get install --no-install-recommends -y libfreetype6-dev libpng-dev net-tools procps r-base libreadline-dev && \
     pip install distribute --upgrade && \
-    pip install pyzmq ipython==2.4 jinja2 tornado pygments && \
+    pip install pyzmq ipython==2.4 jinja2 tornado pygments bioblend && \
     apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ADD ./startup.sh /startup.sh
