@@ -121,8 +121,8 @@ def get(dataset_id, history_id=None):
     # silly like a get() for a Galaxy file in a for-loop, wouldn't want to
     # re-download every time and add that overhead.
     if not os.path.exists(file_path):
-        history = gi.histories.get(history_id)
-        datasets = dict([( d.wrapped["hid"], d.id ) for d in history.get_datasets()])
+        history = gi.histories.show_history(history_id, contents=True)
+        datasets = {ds['hid']: ds['id'] for ds in history}
         dataset = history.get_dataset( datasets[dataset_id] )
         dataset.download( open(file_path, 'wb') )
 
