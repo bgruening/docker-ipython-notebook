@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 from bioblend.galaxy import objects
+from bioblend.galaxy import GalaxyInstance
+from bioblend.galaxy.histories import HistoryClient
+from bioblend.galaxy.datasets import DatasetClient
 import subprocess
 import argparse
 import os
@@ -12,7 +15,6 @@ logging.getLogger("bioblend").setLevel(logging.CRITICAL)
 log = logging.getLogger()
 
 
-
 def _get_ip():
     """Get IP address for the docker host
     """
@@ -23,23 +25,26 @@ def _get_ip():
     cmd_awk = ['awk', '{ print $2 }']
     p3 = subprocess.Popen(cmd_awk, stdin=p2.stdout, stdout=subprocess.PIPE)
     galaxy_ip = p3.stdout.read()
-    log.debug('Host IP determined to be %s', galaxy_ip)
     return galaxy_ip
 
 
-def _test_url(url, key, history_id):
+def _test_url(url, key, history_id, obj=True):
     """Test the functionality of a given galaxy URL, to ensure we can connect
     on that address."""
+    print url
     try:
-        gi = objects.GalaxyInstance(url, key)
-        gi.histories.get(history_id)
-        log.debug('Galaxy URL %s is functional', url)
+        if obj:
+            gi = objects.GalaxyInstance(url, key)
+            gi.histories.get(history_id)
+        else:
+            gi = GalaxyInstance(url=url, key=key)
+            gi.histories.get_histories(history_id)
         return gi
     except Exception:
         return None
 
 
-def get_galaxy_connection(history_id=None):
+def get_galaxy_connection(history_id=None, obj=True):
     """
         Given access to the configuration dict that galaxy passed us, we try and connect to galaxy's API.
 
@@ -62,7 +67,7 @@ def get_galaxy_connection(history_id=None):
     galaxy_ip = _get_ip()
     # Substitute $DOCKER_HOST with real IP
     url = Template(os.environ['GALAXY_URL']).safe_substitute({'DOCKER_HOST': galaxy_ip})
-    gi = _test_url(url, key, history_id)
+    gi = _test_url(url, key, history_id, obj=obj)
     if gi is not None:
         return gi
 
@@ -84,7 +89,7 @@ def get_galaxy_connection(history_id=None):
     built_galaxy_url = 'http://%s:%s/%s' %  (galaxy_ip.strip(), galaxy_port, app_path.strip())
     url = built_galaxy_url.rstrip('/')
 
-    gi = _test_url(url, key, history_id)
+    gi = _test_url(url, key, history_id, obj=obj)
     if gi is not None:
         return gi
 
@@ -112,8 +117,9 @@ def get(dataset_id, history_id=None):
         Return value is the path to the dataset stored under /import/
     """
     history_id = history_id or os.environ['HISTORY_ID']
-
-    gi = get_galaxy_connection(history_id=history_id)
+    # The object version of bioblend is to slow in retrieving all datasets from a history
+    # fallback to the non-object path
+    gi = get_galaxy_connection(history_id=history_id, obj=False)
 
     file_path = '/import/%s' % dataset_id
 
@@ -121,10 +127,11 @@ def get(dataset_id, history_id=None):
     # silly like a get() for a Galaxy file in a for-loop, wouldn't want to
     # re-download every time and add that overhead.
     if not os.path.exists(file_path):
-        history = gi.histories.show_history(history_id, contents=True)
+        hc = HistoryClient(gi)
+        dc = DatasetClient(gi)
+        history = hc.show_history(history_id, contents=True)
         datasets = {ds['hid']: ds['id'] for ds in history}
-        dataset = history.get_dataset( datasets[dataset_id] )
-        dataset.download( open(file_path, 'wb') )
+        dc.download_dataset( datasets[dataset_id], file_path=file_path, use_default_filename=False )
 
     return file_path
 
