@@ -25,13 +25,13 @@ def _get_ip():
     cmd_awk = ['awk', '{ print $2 }']
     p3 = subprocess.Popen(cmd_awk, stdin=p2.stdout, stdout=subprocess.PIPE)
     galaxy_ip = p3.stdout.read()
+    log.debug('Host IP determined to be %s', galaxy_ip)
     return galaxy_ip
 
 
 def _test_url(url, key, history_id, obj=True):
     """Test the functionality of a given galaxy URL, to ensure we can connect
     on that address."""
-    print url
     try:
         if obj:
             gi = objects.GalaxyInstance(url, key)
